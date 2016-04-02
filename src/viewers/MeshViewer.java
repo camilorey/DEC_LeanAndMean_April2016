@@ -69,15 +69,12 @@ public class MeshViewer {
  public void setPrimalVertexSize(float primalVertexSize) {
   this.primalVertexSize = primalVertexSize;
  }
-
  public void setDualVertexSize(float dualVertexSize) {
   this.dualVertexSize = dualVertexSize;
  }
-
  public float getPrimalVertexSize() {
   return primalVertexSize;
  }
-
  public float getDualVertexSize() {
   return dualVertexSize;
  }

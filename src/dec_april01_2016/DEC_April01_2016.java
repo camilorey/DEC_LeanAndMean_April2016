@@ -48,7 +48,7 @@ public class DEC_April01_2016 extends PApplet{
  //-----------------------------------------------------------------
  //----------------MODEL READER-------------------------------------
  //-----------------------------------------------------------------
- String modelName = "toroTriangulatoTexturizado.obj";
+ String modelName = "male.obj";
  long startTime,endTime;
  OBJMeshReader myReader;
  DEC_GeometricContainer myContainer;
@@ -68,14 +68,18 @@ public class DEC_April01_2016 extends PApplet{
  PImage textureMap;
  public void setup(){
   size(1500,800,P3D);
-  textureMap = createTextureMapping();
   colorMode(HSB);
   showComplexOption = new boolean[]{true,false,false,false,false,false};
   selectionType = new boolean[]{true,false,false,false,false,false};
   selectedItem = new int[]{0,0,0,0,0,0};
   complexLimits = new int[]{0,0,0,0,0,0};
-  //loadComplex("icosphere.obj");
   loadComplex(modelName, "BARYCENTRIC");
+  try{
+   textureMap = createComplexUVMap(); 
+  }catch(DEC_Exception ex){
+    println("something went wrong trying to create the complex texture map");
+    ex.printStackTrace();
+  }
  }
  public void mouseDragged(){
   rotX += (mouseX-pmouseX)*0.01f;
@@ -253,13 +257,26 @@ public class DEC_April01_2016 extends PApplet{
    System.out.println("something went wrong trying to create Complex");
   }
  }
- public PGraphics createComplexUVMap(){
+ public PGraphics createComplexUVMap() throws DEC_Exception{
   PGraphics uvSpace = createGraphics(width/2,height,P2D);
   DEC_Iterator iter = myComplex.createIterator(2,'p');
+  uvSpace.beginDraw();
+  uvSpace.colorMode(HSB);
+  uvSpace.background(0);
+  uvSpace.stroke(255);
   while(iter.hasNext()){
    DEC_PrimalObject face = (DEC_PrimalObject) iter.next();
-   
+   //vector content 5,6,7
+   PVector[] uvs = new PVector[]{face.getVectorContent(5),face.getVectorContent(6),face.getVectorContent(7)};
+   float u = face.getIndex() / (float) myComplex.numPrimalFaces();
+   uvSpace.fill(255*u,255,255);
+   uvSpace.beginShape();
+    for(int i=0;i<uvs.length;i++){
+     uvSpace.vertex(uvs[i].x*uvSpace.width,uvs[i].y*uvSpace.height);
+    }
+   uvSpace.endShape(PApplet.CLOSE);
   }
+  uvSpace.endDraw();
   return uvSpace;
  }
  public void drawComplex(int dimension, char type){
@@ -347,9 +364,12 @@ public class DEC_April01_2016 extends PApplet{
  public void draw(){
   background(255);
   if(show2DInformation){
-   image(textureMap,0,0,width/2,height);
-   fill(255);
-   text("complex UV coordinates",10,10);
+   if(textureMap!=null){
+    image(textureMap,0,0,width/2,height);
+    fill(255);
+    text("complex UV coordinates",10,10);
+   }
+   
   }else{
    lights();
    translate(width/2,height/2,zTranslation);
@@ -363,16 +383,6 @@ public class DEC_April01_2016 extends PApplet{
     popMatrix();
    popMatrix();
   }
- }
- public PGraphics createTextureMapping(){
-  PGraphics textureTest = createGraphics(width/2,height,P2D);
-  textureTest.beginDraw();
-   textureTest.background(0);
-   textureTest.stroke(255);
-   textureTest.noFill();
-   textureTest.rect(textureTest.width/2,textureTest.height/2,10,10);
-  textureTest.endDraw();
-  return textureTest;
  }
  /**
   * @param args the command line arguments

@@ -14,10 +14,11 @@ import utils.SparseVector;
  *
  * @author laptop
  */
-public class ScalarForm {
+public class discreteForm {
+ int dimension;
  HashMap<DEC_Object,Float> form;
  
- public ScalarForm(){
+ public discreteForm(){
   form = new HashMap<DEC_Object,Float>();
  }
  public void put(DEC_Object object, float value){
