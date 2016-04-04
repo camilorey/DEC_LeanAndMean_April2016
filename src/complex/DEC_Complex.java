@@ -91,6 +91,7 @@ public class DEC_Complex {
    }
    addObject(dualVert);
   }
+  System.out.println("dual vertices created: "+dualVertices.size());
   //create dual edges from primal edges
   DEC_Iterator edgeIterator = createIterator(1,'p');
   while(edgeIterator.hasNext()){
@@ -98,28 +99,36 @@ public class DEC_Complex {
    ArrayList<DEC_PrimalObject> contFaces = primalFacesContaining(edge);
    int fi0 = -1, fi1=-1;
    int faceOrientation = 1;
+   ArrayList<PVector> vectorContent = new ArrayList<PVector>();
+   DEC_DualObject dualEdge = null;
    if(contFaces.size()==2){
     DEC_PrimalObject f0 = contFaces.get(0);
     DEC_PrimalObject f1 = contFaces.get(1);
     fi0 = f0.getIndex();
     fi1 = f1.getIndex();
-    faceOrientation = f0.getOrientation();
-    DEC_DualObject dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
-    ArrayList<PVector> vectorContent = container.getObjectVectorContent(dualEdge);
-    vectorContent.add(edge.getVectorContent(0));
-    for(int i=0;i<vectorContent.size();i++){
-     dualEdge.addToVectorContent(vectorContent.get(i));
-    }
-    dualEdge.setOrientation(faceOrientation*edge.getOrientation());
-    addObject(dualEdge);
-   }else{
-    if(contFaces.size()==1){
-     System.out.println("edge: "+edge.getIndex()+ " is boundary edge");
-    }else{
-     System.out.println("edge "+edge.getIndex()+ " has problems: there are "+ contFaces.size()+" faces containing edge");
-    }
+    faceOrientation = f0.getOrientation(); 
+    dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
+    vectorContent.add(edge.getVectorContent(0)); // add center of primal edge to vector content
+    vectorContent.add(f0.getVectorContent(1)); //add normal from first face
+    vectorContent.add(f1.getVectorContent(1)); //add normal from second face
+   }else if(contFaces.size()==1){
+    DEC_PrimalObject f0 = contFaces.get(0);
+    edge.markAsBorder();
+    fi0 = f0.getIndex();
+    fi1 = edge.getIndex();
+    dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
+    dualEdge.markAsBorder();
+    vectorContent.add(edge.getVectorContent(0)); // add center of primal edge to vector content
+    vectorContent.add(edge.getVectorContent(1)); //add normal from first face
+    vectorContent.add(f0.getVectorContent(1)); //add normal from second face
    }
+   for(int i=0;i<vectorContent.size();i++){
+     dualEdge.addToVectorContent(vectorContent.get(i));
+   }
+   dualEdge.setOrientation(faceOrientation*edge.getOrientation());
+   addObject(dualEdge);
   }
+  System.out.println("dual edges created: "+dualEdges.size());
   //create dual faces from primal vertices
   DEC_Iterator vertexIterator = createIterator(0,'p');
   while(vertexIterator.hasNext()){
@@ -147,14 +156,20 @@ public class DEC_Complex {
     dualFace.addToVectorContent(dualFaceVectorContent.get(i));
    }
    ArrayList<PVector> dualFaceAdditionalContent = new ArrayList<PVector>();
+   boolean isBorder = false;
    for(int i=0;i<contEdges.size();i++){
     dualFaceAdditionalContent.add(contEdges.get(i).getVectorContent(0));
+    isBorder = isBorder || contEdges.get(i).isBorder();
    }
    dualFace.setExtraGeometricContent(dualFaceAdditionalContent);
    dualFace.setOrientation(dualFaceIndices.length %2 == 0?1:-1);
+   if(isBorder){
+    vertex.markAsBorder();
+    dualFace.markAsBorder();
+   }
    addObject(dualFace);
   }
-  System.out.println("finished creating dual faces");
+  System.out.println("dual faces created: "+dualFaces.size());
  }
  public void setPrimalComplex(DEC_GeometricContainer container) throws DEC_Exception{
   ArrayList<IndexSet> primalFaceIndices = container.getModelFaceIndexInformation();
@@ -184,6 +199,7 @@ public class DEC_Complex {
    face.setOrientation(surfaceOrientation*decOrientation);
    addObject(face);
   }
+  System.out.println("primal faces created: "+primalFaces.size());
   //create primal edges from face boundary
   for(int i=0;i<primalFaces.size();i++){
    DEC_PrimalObject face = primalFaces.get(i);
@@ -201,6 +217,7 @@ public class DEC_Complex {
     }
    }
   }
+  System.out.println("primal edges created: "+primalEdges.size());
  }
  public DEC_Iterator objectNeighborhood(DEC_Object object) throws DEC_Exception{
   ArrayList neighborhoodContent = null;

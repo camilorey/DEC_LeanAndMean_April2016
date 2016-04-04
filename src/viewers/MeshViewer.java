@@ -78,13 +78,16 @@ public class MeshViewer {
  public float getDualVertexSize() {
   return dualVertexSize;
  }
+ public PVector scalePVector(PVector p){
+  return new PVector(p.x*modelWHD[0],p.y*modelWHD[1],p.z*modelWHD[2]);
+ }
  public void drawBoundingBox(){
   parent.noFill();
   parent.stroke(0);
   parent.box(2*modelWHD[0],2*modelWHD[1],2*modelWHD[2]);
  }
  public void drawObject(DEC_Object object, DEC_GeometricContainer container, boolean selected)throws DEC_Exception{
-  ArrayList<PVector> verts = object.getGeometry(container);
+  ArrayList<PVector> verts = container.getGeometricContent(object);
   if(verts.size() == 1){
    if(object instanceof DEC_PrimalObject){
     drawVertex(verts.get(0),'p',selected);

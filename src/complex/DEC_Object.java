@@ -31,6 +31,7 @@ public class DEC_Object {
 	protected ArrayList<Float> scalarContent;
 	protected ArrayList<PVector> vectorContent;
         protected ArrayList<PVector> extraGeometricContent;
+        protected boolean isBorder;
 
 	public DEC_Object() {
 	 this.vertices = null;
@@ -38,6 +39,7 @@ public class DEC_Object {
          this.orientation = 1;
          this.scalarContent = new ArrayList<Float>();
          this.vectorContent = new ArrayList<PVector>();
+         isBorder = false;
 	}
 
 	public DEC_Object(int index) {
@@ -46,6 +48,7 @@ public class DEC_Object {
          this.orientation = 1;
          this.scalarContent = new ArrayList<Float>();
          this.vectorContent = new ArrayList<PVector>();
+         isBorder = false;
 	}
 	public DEC_Object(IndexSet vertices) throws DEC_Exception{
 	 this.vertices = vertices;
@@ -53,6 +56,7 @@ public class DEC_Object {
          this.orientation = 1;
          this.scalarContent = new ArrayList<Float>();
          this.vectorContent = new ArrayList<PVector>();
+         isBorder = false;
 	}
 
 	public DEC_Object(IndexSet vertices, int index) throws DEC_Exception{
@@ -61,6 +65,7 @@ public class DEC_Object {
          this.orientation = 1;
          this.scalarContent = new ArrayList<Float>();
          this.vectorContent = new ArrayList<PVector>();
+         isBorder = false;
 	}
 	public DEC_Object(IndexSet vertices, int index, int orientation) throws DEC_Exception{
 	 this.vertices = vertices;
@@ -68,6 +73,7 @@ public class DEC_Object {
          this.orientation = orientation;
          this.scalarContent = new ArrayList<Float>();
          this.vectorContent = new ArrayList<PVector>();
+         isBorder = false;
 	}
         public DEC_Object(IndexSet vertices, int index, int orientation, ArrayList<Float> scalarContent, ArrayList<PVector> vectorContent) throws DEC_Exception{
 	 this.vertices = vertices;
@@ -75,7 +81,14 @@ public class DEC_Object {
          this.orientation = orientation;
          this.scalarContent = scalarContent;
          this.vectorContent = vectorContent;
+         isBorder = false;
 	}
+        public void markAsBorder(){
+         isBorder = true;
+        }
+        public boolean isBorder(){
+         return isBorder;
+        }
 	public int getIndex() {
 	 return this.index;
 	}

@@ -92,14 +92,21 @@ public class DEC_GeometricContainer {
           vectorInfo.add(vertCenter);
           vectorInfo.add(vertNormal);
          }else if(object.dimension() == 1){
-           int i0 = object.getVertices().getIndex(0);
-           int i1 = object.getVertices().getIndex(1);
-           PVector v0 = dualVertices.get(i0);
-           PVector v1 = dualVertices.get(i1);
-           PVector n0 = faceNormals.get(v0);
-           PVector n1 = faceNormals.get(v1);
-           vectorInfo.add(n0);
-           vectorInfo.add(n1);
+           if(object.isBorder()){
+             int i1 = object.getVertices().getIndex(1);//index of primal face
+             PVector v1 = dualVertices.get(i1);
+             PVector n1 = faceNormals.get(v1);
+             vectorInfo.add(n1);
+           }else{
+            int i0 = object.getVertices().getIndex(0);
+            int i1 = object.getVertices().getIndex(1);
+            PVector v0 = dualVertices.get(i0);
+            PVector v1 = dualVertices.get(i1);
+            PVector n0 = faceNormals.get(v0);
+            PVector n1 = faceNormals.get(v1);
+            vectorInfo.add(n0);
+            vectorInfo.add(n1);
+           }
          }else if(object.dimension()==2){
            PVector faceCenter = primalVertices.get(object.getIndex());
            PVector faceNormal = vertexNormals.get(faceCenter);
@@ -167,7 +174,16 @@ public class DEC_GeometricContainer {
         }
 	public ArrayList<PVector> getGeometricContent(DEC_Object object) throws DEC_Exception{
          if(object instanceof DEC_PrimalObject){
-          return getFromPrimalVertices(object.getVertices());
+          if(object.dimension()!=1 || !object.isBorder()){
+           return getFromPrimalVertices(object.getVertices());
+          }else{
+            int index0 = object.getVertices().getIndex(0);
+            int index1 = object.getVertices().getIndex(1);
+            ArrayList<PVector> content = new ArrayList<PVector>();
+            content.add(object.getVectorContent(0));
+            content.add(primalVertices.get(index1));
+            return content;
+          }
          }else if(object instanceof DEC_DualObject){
            return getFromDualVertices(object.getVertices()); 
          }else{

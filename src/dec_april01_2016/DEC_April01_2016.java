@@ -12,6 +12,8 @@ import complex.DEC_Object;
 import complex.DEC_PrimalObject;
 import containers.DEC_GeometricContainer;
 import exceptions.DEC_Exception;
+import forms.DiscreteForm;
+import java.util.ArrayList;
 import java.util.HashMap;
 import processing.core.PApplet;
 import static processing.core.PApplet.println;
@@ -24,6 +26,9 @@ import processing.event.MouseEvent;
 import readers.OBJMeshReader;
 import viewers.MeshViewer;
 import static processing.core.PApplet.println;
+import static processing.core.PApplet.println;
+import static processing.core.PApplet.println;
+import utils.GeometricUtils;
 /**
  *
  * @author laptop
@@ -48,7 +53,8 @@ public class DEC_April01_2016 extends PApplet{
  //-----------------------------------------------------------------
  //----------------MODEL READER-------------------------------------
  //-----------------------------------------------------------------
- String modelName = "male.obj";
+ //String modelName = "hombre2Triangulado.obj";
+ String modelName = "toroTriangulatoTexturizado.obj";
  long startTime,endTime;
  OBJMeshReader myReader;
  DEC_GeometricContainer myContainer;
@@ -60,7 +66,8 @@ public class DEC_April01_2016 extends PApplet{
  //-----------------------------------------------------------------
  //----------MODEL VISUALIZATION PARAMETERS-------------------------
  //-----------------------------------------------------------------
- HashMap<PVector,Float> scalarFieldPlot;
+ DiscreteForm curvatureForm;
+ HashMap<PVector,Double> curvatureLookUpTable;
  //-----------------------------------------------------------------
  //-------------TEXTURE MAP HANDLER---------------------------------
  //-----------------------------------------------------------------
@@ -76,6 +83,9 @@ public class DEC_April01_2016 extends PApplet{
   loadComplex(modelName, "BARYCENTRIC");
   try{
    textureMap = createComplexUVMap(); 
+   curvatureForm = createCurvatureForm();
+   curvatureLookUpTable = curvatureForm.createLookUpTable(myComplex);
+   println("curvature form size: "+curvatureLookUpTable.keySet().size());
   }catch(DEC_Exception ex){
     println("something went wrong trying to create the complex texture map");
     ex.printStackTrace();
@@ -257,6 +267,36 @@ public class DEC_April01_2016 extends PApplet{
    System.out.println("something went wrong trying to create Complex");
   }
  }
+ public DiscreteForm createCurvatureForm(){
+  DEC_Iterator iter = myComplex.createIterator(0,'p');
+  DiscreteForm curvatureForm = new DiscreteForm(myComplex.numPrimalVertices());
+  while(iter.hasNext()){
+   DEC_PrimalObject v = (DEC_PrimalObject) iter.next();
+   try{
+    float angleSum = 0;
+    PVector vertexCenter = v.getVectorContent(0);
+    PVector vertexNormal = v.getVectorContent(1);
+    DEC_Iterator neighborhood = myComplex.objectNeighborhood(v);
+    String neighbors ="";
+    ArrayList<PVector> neighCenters = new ArrayList<PVector>();
+    while(neighborhood.hasNext()){
+     DEC_PrimalObject neighVertex = (DEC_PrimalObject) neighborhood.next();
+     neighCenters.add(neighVertex.getVectorContent(0));
+    }
+    for(int i=0;i<neighCenters.size();i++){
+     PVector A = neighCenters.get(i);
+     PVector B = neighCenters.get((i+1)%neighCenters.size());
+     double angle = GeometricUtils.angleBetweenVectors(vertexCenter, vertexNormal, A, B);
+     angleSum+=angle;
+    }
+    println(degrees(angleSum));
+    curvatureForm.put(v, 2*Math.PI-angleSum);
+   }catch(DEC_Exception ex){
+    println("something went wrong trying to calculate angle defect");
+   }
+  }
+  return curvatureForm;
+ }
  public PGraphics createComplexUVMap() throws DEC_Exception{
   PGraphics uvSpace = createGraphics(width/2,height,P2D);
   DEC_Iterator iter = myComplex.createIterator(2,'p');
@@ -292,22 +332,6 @@ public class DEC_April01_2016 extends PApplet{
     }
    }catch(DEC_Exception ex){
      System.out.println("something went wrong plotting object");
-   }
-  }
- }
- public void drawScalarField(){
-  DEC_Iterator iterator = myComplex.createIterator(2, 'd');
-  while(iterator.hasNext()){
-   DEC_Object object = iterator.next();
-   try{
-   PVector hueVertex = object.getVectorContent(0);
-   float fieldHue = scalarFieldPlot.get(hueVertex);
-   stroke(255*fieldHue,255,255);
-   fill(255*fieldHue,255,255);
-   myViewer.drawObject(object, myContainer, false);
-   }catch(DEC_Exception ex){
-     println("something went wrong trying to plot field on vertex: "+object);
-     ex.printStackTrace();
    }
   }
  }
@@ -358,8 +382,31 @@ public class DEC_April01_2016 extends PApplet{
   //myViewer.strokeWeight(1);
   //myViewer.drawBoundingBox();
   showComplex();
- // drawScalarField(); 
- //showNeighborhood(numElement);
+  drawCurvatureForm();
+  //showNeighborhood(numElement);
+ }
+ public void drawCurvatureForm(){
+  DEC_Iterator iter = myComplex.createIterator(2, 'p');
+  noStroke();
+  while(iter.hasNext()){
+   DEC_Object face = (DEC_PrimalObject) iter.next();
+   try{
+    ArrayList<PVector> verts = myContainer.getGeometricContent(face);
+    ArrayList<Double> hueValues = new ArrayList<Double>();
+    for(int i=0;i<verts.size();i++){
+     hueValues.add(curvatureLookUpTable.get(verts.get(i)));
+    }
+    beginShape();
+    for(int i=0;i<verts.size();i++){
+     PVector w = myViewer.scalePVector(verts.get(i));
+     fill(255*hueValues.get(i).floatValue(),255,255);
+     vertex(w.x,w.y,w.z);
+    }
+    endShape(CLOSE);
+   }catch(DEC_Exception ex){
+     println("cannot draw form");
+   }
+  }
  }
  public void draw(){
   background(255);
@@ -369,7 +416,6 @@ public class DEC_April01_2016 extends PApplet{
     fill(255);
     text("complex UV coordinates",10,10);
    }
-   
   }else{
    lights();
    translate(width/2,height/2,zTranslation);

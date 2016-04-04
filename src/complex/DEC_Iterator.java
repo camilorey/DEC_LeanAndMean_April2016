@@ -24,6 +24,9 @@ public class DEC_Iterator {
   content.add(object);
   index = 0;
  }
+ public int size(){
+  return content.size();
+ }
  public void setList(ArrayList list){
   this.content = list;
  }
