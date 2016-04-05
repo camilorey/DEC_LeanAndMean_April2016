@@ -54,7 +54,11 @@ public class DEC_April01_2016 extends PApplet{
  //----------------MODEL READER-------------------------------------
  //-----------------------------------------------------------------
  //String modelName = "hombre2Triangulado.obj";
- String modelName = "toroTriangulatoTexturizado.obj";
+ //String modelName = "male.obj";
+ //String modelName = "hand.obj";
+  String modelName = "head.obj";
+ //String modelName = "toroTriangulatoTexturizado.obj";
+ //String modelName = "toroTrianguladoTexturizado_MasDetalle.obj";
  long startTime,endTime;
  OBJMeshReader myReader;
  DEC_GeometricContainer myContainer;
@@ -228,45 +232,6 @@ public class DEC_April01_2016 extends PApplet{
    System.out.println("something went wrong trying to create Complex");
   }
  }
- public void loadComplex(String fileName){
-  myViewer = new MeshViewer(this);
-  myReader = new OBJMeshReader(fileName, this);
-  startTime = System.currentTimeMillis();
-  System.out.println("------------------------------------------------------");
-  System.out.println("-------OBJ model loading using OBJMeshReader----------");
-  System.out.println("------------------------------------------------------");
-  myReader.loadModel();
-  myViewer.setModelScale(100, myReader.getModelBoundingBox());
-  endTime = System.currentTimeMillis();
-  System.out.println(" OBJ loading finished. Elapsed time: "+(endTime-startTime));
-  System.out.println("------------------------------------------------------");
-  myContainer = new DEC_GeometricContainer();
-  System.out.println("------------------------------------------------------");
-  System.out.println("---Geometric Container creation from OBJMeshReader-----");
-  startTime = System.currentTimeMillis();
-  myContainer.setContent(myReader);
-  endTime = System.currentTimeMillis();
-  System.out.println("------------------------------------------------------");
-  myContainer.printContainerInfo();
-  System.out.println("------------------------------------------------------");
-  System.out.println(" Geometric Container finished. Elapsed time: "+(endTime-startTime));
-  System.out.println("------------------------------------------------------");
-  try{
-   System.out.println("------------------------------------------------------"); 
-   myComplex = new DEC_Complex(); 
-   startTime = System.currentTimeMillis();
-   System.out.println("---DEC Complex creation from Geometric Container------");
-   myComplex.setComplex(myContainer,myReader);
-   endTime = System.currentTimeMillis();
-   myComplex.printComplexInformation();
-   System.out.println("DEC Complex creation finished. Elapsed time: "+(endTime-startTime));
-   System.out.println("------------------------------------------------------");
-   complexLimits = new int[]{myComplex.numPrimalVertices(),myComplex.numPrimalEdges(),myComplex.numPrimalFaces(),
-                             myComplex.numDualVertices(),myComplex.numDualEdges(),myComplex.numDualFaces()};
-  }catch(DEC_Exception ex){
-   System.out.println("something went wrong trying to create Complex");
-  }
- }
  public DiscreteForm createCurvatureForm(){
   DEC_Iterator iter = myComplex.createIterator(0,'p');
   DiscreteForm curvatureForm = new DiscreteForm(myComplex.numPrimalVertices());
@@ -289,7 +254,6 @@ public class DEC_April01_2016 extends PApplet{
      double angle = GeometricUtils.angleBetweenVectors(vertexCenter, vertexNormal, A, B);
      angleSum+=angle;
     }
-    println(degrees(angleSum));
     curvatureForm.put(v, 2*Math.PI-angleSum);
    }catch(DEC_Exception ex){
     println("something went wrong trying to calculate angle defect");
@@ -382,7 +346,7 @@ public class DEC_April01_2016 extends PApplet{
   //myViewer.strokeWeight(1);
   //myViewer.drawBoundingBox();
   showComplex();
-  drawCurvatureForm();
+  //drawCurvatureForm();
   //showNeighborhood(numElement);
  }
  public void drawCurvatureForm(){

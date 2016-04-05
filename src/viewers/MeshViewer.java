@@ -96,9 +96,9 @@ public class MeshViewer {
    }
   }else if(verts.size() == 2){
    if(object instanceof DEC_PrimalObject){
-    drawPrimalEdge(verts.get(0),verts.get(1),selected);
+    drawPrimalEdge(verts.get(0),verts.get(1),selected||object.isBorder());
    }else if(object instanceof DEC_DualObject){
-    drawDualEdge(verts.get(0),verts.get(1),object.getVectorContent(object.vectorContentSize()-1),selected);
+    drawDualEdge(verts.get(0),verts.get(1),object.getVectorContent(0),selected || object.isBorder());
    }
   }else{
    if(object instanceof DEC_PrimalObject){
@@ -125,6 +125,7 @@ public class MeshViewer {
  }
  public void drawVertex(PVector pos,char type,boolean selected){
   float radius = type =='p'? primalVertexSize:dualVertexSize;
+  parent.noStroke();
   parent.pushMatrix();
    parent.translate(pos.x*modelWHD[0],pos.y*modelWHD[1],pos.z*modelWHD[2]);
    if(selected){
@@ -136,18 +137,18 @@ public class MeshViewer {
  }
  public void drawPrimalEdge(PVector p1, PVector p2,boolean selected){
   if(selected){
-   strokeWeight(5);
+   parent.strokeWeight(5);
   }else{
-   strokeWeight(1);
+   parent.strokeWeight(1);
   }
   parent.line(p1.x*modelWHD[0],p1.y*modelWHD[1],p1.z*modelWHD[2],
               p2.x*modelWHD[0],p2.y*modelWHD[1],p2.z*modelWHD[2]);
  }
  public void drawDualEdge(PVector p1, PVector p2, PVector c, boolean selected){
   if(selected){
-   strokeWeight(5);
+   parent.strokeWeight(5);
   }else{
-   strokeWeight(1);
+   parent.strokeWeight(1);
   }
   parent.line(p1.x*modelWHD[0],p1.y*modelWHD[1],p1.z*modelWHD[2],
               c.x*modelWHD[0],c.y*modelWHD[1],c.z*modelWHD[2]);

@@ -26,6 +26,7 @@ public class OBJMeshReader {
  protected BoundingBox objBox;
  protected PApplet parent;
  protected float modelScale;
+ protected boolean withTexture;
  protected ArrayList<PVector> modelVertices;
  protected ArrayList<PVector> modelDualVertices;
  protected ArrayList<IndexSet> faceIndices;
@@ -93,11 +94,12 @@ public class OBJMeshReader {
   System.out.println("face normals: "+faceNormals.keySet().size());
   System.out.println("------------------------------------------------------");
  }
- public void loadModel(){
+ public void loadModel(String centerType, boolean withTexture){
   objModel = new OBJModel(parent, fileName);
   objModel.translateToCenter();
   objBox = new BoundingBox(parent,objModel);
-  setModelInformation();
+  this.withTexture = withTexture;
+  setModelInformation(centerType);
   System.out.println("--------------OBJ Model info--------------------------");
   System.out.println("model vertices: "+modelVertices.size());
   System.out.println("model faces: "+modelDualVertices.size());
@@ -121,7 +123,6 @@ public class OBJMeshReader {
    for(int j=0;j<f.length;j++){
     PVector[] verts = f[j].getVertices();
     PVector[] normals = f[j].getNormals();
-    PVector[] texels = f[j].getUvs();
     int[] faceInds = f[j].getVertexIndices();
     PVector faceCenter = normalize(createCenter(centerType,verts));
     PVector faceNormal = f[j].getNormal();
@@ -130,40 +131,18 @@ public class OBJMeshReader {
     faceIndices.add(new IndexSet(faceInds));
     for(int k=0;k<verts.length;k++){
      vertexNormals.put(normalize(verts[k]), normals[k]);
+    }
+    if(withTexture){
+     PVector[] texels = f[j].getUvs();
+     for(int k=0;k<verts.length;k++){
      vertexTexels.put(normalize(verts[k]),texels[k]);
+     }
     }
    }
   }
  }
- public void setModelInformation(){
-  modelVertices = new ArrayList<PVector>();
-  modelDualVertices = new ArrayList<PVector>();
-  faceNormals = new HashMap<PVector,PVector>();
-  vertexNormals = new HashMap<PVector,PVector>();
-  vertexTexels = new HashMap<PVector,PVector>();
-  faceIndices = new ArrayList<IndexSet>();
-  for(int i=0;i<objModel.getVertexCount();i++){
-   modelVertices.add(normalize(objModel.getVertex(i)));
-  }
-  for(int i=0;i<objModel.getSegmentCount();i++){
-   Segment seg = objModel.getSegment(i);
-   Face[] f = seg.getFaces();
-   for(int j=0;j<f.length;j++){
-    PVector[] verts = f[j].getVertices();
-    PVector[] normals = f[j].getNormals();
-    PVector[] texels = f[j].getUvs();
-    int[] faceInds = f[j].getVertexIndices();
-    PVector faceCenter = normalize(f[j].getCenter());
-    PVector faceNormal = f[j].getNormal();
-    modelDualVertices.add(faceCenter);
-    faceNormals.put(faceCenter, faceNormal);
-    faceIndices.add(new IndexSet(faceInds));
-    for(int k=0;k<verts.length;k++){
-     vertexNormals.put(normalize(verts[k]), normals[k]);
-     vertexTexels.put(normalize(verts[k]),texels[k]);
-    }
-   }
-  }
+ public boolean withTexture(){
+  return this.withTexture;
  }
  public PVector createCenter(String centerType, PVector[] verts){
   PVector center = new PVector();

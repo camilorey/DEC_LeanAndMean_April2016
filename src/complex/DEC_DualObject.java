@@ -21,9 +21,6 @@ import utils.GeometricUtils;
 public class DEC_DualObject extends DEC_Object{
 
  protected int dimension;
- 
-
- 
  public DEC_DualObject() {
   super();
  }
@@ -73,6 +70,7 @@ public class DEC_DualObject extends DEC_Object{
  public DEC_DualObject(DEC_Object object, char dimension) throws DEC_Exception{
   super(object.getVertices(),object.getIndex(),object.getOrientation(),object.scalarContent,object.vectorContent);
   this.dimension = assignDimension(dimension);
+  this.isBorder = object.isBorder();
   this.extraGeometricContent = object.getExtraGeometricContent();
  }
  @Override

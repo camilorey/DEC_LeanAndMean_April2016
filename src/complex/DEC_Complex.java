@@ -99,7 +99,6 @@ public class DEC_Complex {
    ArrayList<DEC_PrimalObject> contFaces = primalFacesContaining(edge);
    int fi0 = -1, fi1=-1;
    int faceOrientation = 1;
-   ArrayList<PVector> vectorContent = new ArrayList<PVector>();
    DEC_DualObject dualEdge = null;
    if(contFaces.size()==2){
     DEC_PrimalObject f0 = contFaces.get(0);
@@ -108,22 +107,19 @@ public class DEC_Complex {
     fi1 = f1.getIndex();
     faceOrientation = f0.getOrientation(); 
     dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
-    vectorContent.add(edge.getVectorContent(0)); // add center of primal edge to vector content
-    vectorContent.add(f0.getVectorContent(1)); //add normal from first face
-    vectorContent.add(f1.getVectorContent(1)); //add normal from second face
    }else if(contFaces.size()==1){
     DEC_PrimalObject f0 = contFaces.get(0);
     edge.markAsBorder();
     fi0 = f0.getIndex();
-    fi1 = edge.getIndex();
+    fi1 = f0.getIndex();
+    faceOrientation = f0.getOrientation();
     dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
     dualEdge.markAsBorder();
-    vectorContent.add(edge.getVectorContent(0)); // add center of primal edge to vector content
-    vectorContent.add(edge.getVectorContent(1)); //add normal from first face
-    vectorContent.add(f0.getVectorContent(1)); //add normal from second face
    }
+   ArrayList<PVector> vectorContent = container.getObjectVectorContent(dualEdge);
+   dualEdge.addToVectorContent(edge.getVectorContent(0));
    for(int i=0;i<vectorContent.size();i++){
-     dualEdge.addToVectorContent(vectorContent.get(i));
+    dualEdge.addToVectorContent(vectorContent.get(i));
    }
    dualEdge.setOrientation(faceOrientation*edge.getOrientation());
    addObject(dualEdge);
