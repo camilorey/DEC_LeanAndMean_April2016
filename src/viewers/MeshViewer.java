@@ -13,6 +13,7 @@ import exceptions.DEC_Exception;
 import java.util.ArrayList;
 import java.util.HashMap;
 import processing.core.PApplet;
+import processing.core.PImage;
 import processing.core.PVector;
 import saito.objloader.BoundingBox;
 import utils.GeometricUtils;
@@ -90,9 +91,9 @@ public class MeshViewer {
   ArrayList<PVector> verts = container.getGeometricContent(object);
   if(verts.size() == 1){
    if(object instanceof DEC_PrimalObject){
-    drawVertex(verts.get(0),'p',selected);
+    drawVertex(verts.get(0),'p',selected || object.isBorder());
    }else if(object instanceof DEC_DualObject){
-    drawVertex(verts.get(0),'d',selected);
+    drawVertex(verts.get(0),'d',selected || object.isBorder());
    }
   }else if(verts.size() == 2){
    if(object instanceof DEC_PrimalObject){
@@ -116,9 +117,49 @@ public class MeshViewer {
     }
     if(object.getExtraGeometricContent()!= null){
      //System.out.println(" drawing with extra content");
-     drawDualFaceWithExtraContent(verts,object.getExtraGeometricContent() , faceCenter, faceNormal, selected);
+     drawDualFaceWithExtraContent(verts,object.getExtraGeometricContent() , faceCenter, faceNormal, selected || object.isBorder());
     }else{
-     drawDualFace(verts, faceCenter,faceNormal ,faceNormals,selected);
+     drawDualFace(verts, faceCenter,faceNormal ,faceNormals,selected || object.isBorder());
+    }
+   }
+  }
+ }
+ public void drawObject(DEC_Object object, DEC_GeometricContainer container, boolean selected, PImage textureImage)throws DEC_Exception{
+  ArrayList<PVector> verts = container.getGeometricContent(object);
+  if(verts.size() == 1){
+   if(object instanceof DEC_PrimalObject){
+    drawVertex(verts.get(0),'p',selected || object.isBorder());
+   }else if(object instanceof DEC_DualObject){
+    drawVertex(verts.get(0),'d',selected || object.isBorder());
+   }
+  }else if(verts.size() == 2){
+   if(object instanceof DEC_PrimalObject){
+    drawPrimalEdge(verts.get(0),verts.get(1),selected||object.isBorder());
+   }else if(object instanceof DEC_DualObject){
+    drawDualEdge(verts.get(0),verts.get(1),object.getVectorContent(0),selected || object.isBorder());
+   }
+  }else{
+   if(object instanceof DEC_PrimalObject){
+    ArrayList<PVector> faceNormals = new ArrayList<PVector>();
+    ArrayList<PVector> faceTexels = new ArrayList<PVector>();
+    faceNormals.add(object.getVectorContent(2));
+    faceNormals.add(object.getVectorContent(3));
+    faceNormals.add(object.getVectorContent(4));
+    faceTexels.add(object.getVectorContent(5));
+    faceTexels.add(object.getVectorContent(6));
+    faceTexels.add(object.getVectorContent(7));
+    drawPrimalFace(textureImage, verts, faceNormals, faceTexels, selected || object.isBorder());
+   }else if(object instanceof DEC_DualObject){
+    PVector faceCenter = object.getVectorContent(0);
+    PVector faceNormal = object.getVectorContent(1);
+    ArrayList<PVector> faceNormals = new ArrayList<PVector>();
+    for(int i=2;i<object.vectorContentSize();i++){
+     faceNormals.add(object.getVectorContent(i));
+    }
+    if(object.getExtraGeometricContent()!= null){
+     drawDualFaceWithExtraContent(verts,object.getExtraGeometricContent() , faceCenter, faceNormal, selected || object.isBorder());
+    }else{
+     drawDualFace(verts, faceCenter,faceNormal ,faceNormals,selected || object.isBorder());
     }
    }
   }
@@ -129,7 +170,7 @@ public class MeshViewer {
   parent.pushMatrix();
    parent.translate(pos.x*modelWHD[0],pos.y*modelWHD[1],pos.z*modelWHD[2]);
    if(selected){
-    parent.box(2.0f*radius);
+    parent.box(3.0f*radius);
    }else{
     parent.box(radius);
    }
@@ -161,7 +202,7 @@ public class MeshViewer {
   parent.line(pos.x*modelWHD[0],pos.y*modelWHD[1],pos.z*modelWHD[2],
               pos.x*modelWHD[0]+w.x,pos.y*modelWHD[1]+w.y,pos.z*modelWHD[2]+w.z);
  }
- public void drawPrimalFace(ArrayList<PVector> verts, ArrayList<PVector> normals,boolean selected){
+ public void drawPrimalFace(ArrayList<PVector> verts, ArrayList<PVector> normals, boolean selected){
   if(selected){
    parent.strokeWeight(3);
    parent.stroke(255,255,255);
@@ -172,6 +213,21 @@ public class MeshViewer {
   for(int i=0;i<verts.size();i++){
    parent.normal(normals.get(i).x,normals.get(i).y,normals.get(i).z);
    parent.vertex(verts.get(i).x*modelWHD[0],verts.get(i).y*modelWHD[1],verts.get(i).z*modelWHD[2]);
+  }
+  parent.endShape(PApplet.CLOSE);
+ }
+ public void drawPrimalFace(PImage textureImage, ArrayList<PVector> verts, ArrayList<PVector> normals, ArrayList<PVector> texels, boolean selected){
+  if(selected){
+   parent.strokeWeight(3);
+   parent.stroke(255,255,255);
+  }else{
+   parent.noStroke();
+  }
+  parent.beginShape();
+  parent.texture(textureImage);
+  for(int i=0;i<verts.size();i++){
+   parent.normal(normals.get(i).x,normals.get(i).y,normals.get(i).z);
+   parent.vertex(verts.get(i).x*modelWHD[0],verts.get(i).y*modelWHD[1],verts.get(i).z*modelWHD[2],texels.get(i).x,texels.get(i).y);
   }
   parent.endShape(PApplet.CLOSE);
  }
@@ -200,7 +256,6 @@ public class MeshViewer {
  public void drawDualFace(ArrayList<PVector> verts, PVector faceCenter,PVector faceNormal,ArrayList<PVector> normals,boolean selected){
   if(verts.size()==normals.size()){
    int N = verts.size();
-   
    parent.noStroke();
    for(int i=0;i<N;i++){
     PVector c = new PVector(faceCenter.x*modelWHD[0],faceCenter.y*modelWHD[1],faceCenter.z*modelWHD[2]);
