@@ -45,7 +45,8 @@ public class DEC_PrimalObject extends DEC_Object {
  
  public DEC_PrimalObject(DEC_Object object) throws DEC_Exception{
   super(object.getVertices(),object.getIndex(),object.getOrientation(),object.scalarContent,object.vectorContent);
-  
+  scalarContent_2 = object.scalarContent_2;
+  vectorContent_2 = object.vectorContent_2;
  }
  @Override
  public float volume(DEC_GeometricContainer container) throws DEC_Exception{
@@ -64,11 +65,15 @@ public class DEC_PrimalObject extends DEC_Object {
    return bounds;
   }else if(dimension()==1){
    if(getOrientation()>0){
-    bounds.add(new DEC_Object(new IndexSet(vertices.getIndex(1)),-1,orientation));
-    bounds.add(new DEC_Object(new IndexSet(vertices.getIndex(0)),-1,-orientation));
+    DEC_Object sigma0 = new DEC_Object(new IndexSet(vertices.getIndex(1)),-1,orientation);
+    DEC_Object sigma1 = new DEC_Object(new IndexSet(vertices.getIndex(0)),-1,-orientation);
+    bounds.add(sigma0);
+    bounds.add(sigma1);
    }else{
-    bounds.add(new DEC_Object(new IndexSet(vertices.getIndex(1)),-1,orientation));
-    bounds.add(new DEC_Object(new IndexSet(vertices.getIndex(0)),-1,-orientation));
+    DEC_Object sigma0 = new DEC_Object(new IndexSet(vertices.getIndex(1)),-1,orientation);
+    DEC_Object sigma1 = new DEC_Object(new IndexSet(vertices.getIndex(0)),-1,-orientation);
+    bounds.add(sigma0);
+    bounds.add(sigma1);
    }
   }else if(dimension()==2){
    if(getOrientation()>0){

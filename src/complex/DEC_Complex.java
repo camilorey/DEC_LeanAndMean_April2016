@@ -85,10 +85,8 @@ public class DEC_Complex {
   while(faceIterator.hasNext()){
    DEC_PrimalObject face = (DEC_PrimalObject) faceIterator.next();
    DEC_DualObject dualVert = new DEC_DualObject(new IndexSet(face.getIndex()),face.getIndex(),'v');
-   ArrayList<PVector> vectorContent = container.getObjectVectorContent(dualVert);
-   for(int i=0;i<vectorContent.size();i++){
-    dualVert.addToVectorContent(vectorContent.get(i));
-   }
+   HashMap<String,PVector> vecContent = container.createObjectVectorContent(dualVert);
+   dualVert.addToVectorContent(vecContent);
    addObject(dualVert);
   }
   System.out.println("dual vertices created: "+dualVertices.size());
@@ -116,11 +114,8 @@ public class DEC_Complex {
     dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
     dualEdge.markAsBorder();
    }
-   ArrayList<PVector> vectorContent = container.getObjectVectorContent(dualEdge);
-   dualEdge.addToVectorContent(edge.getVectorContent(0));
-   for(int i=0;i<vectorContent.size();i++){
-    dualEdge.addToVectorContent(vectorContent.get(i));
-   }
+   HashMap<String,PVector> vecContent = container.createObjectVectorContent(dualEdge);
+   dualEdge.addToVectorContent("CENTER", edge.getVectorContent("CENTER"));
    dualEdge.setOrientation(faceOrientation*edge.getOrientation());
    addObject(dualEdge);
   }
@@ -130,31 +125,31 @@ public class DEC_Complex {
   while(vertexIterator.hasNext()){
    DEC_PrimalObject vertex = (DEC_PrimalObject) vertexIterator.next();
    int dualFaceIndex = vertex.getIndex();
-   PVector vertexCenter = vertex.getVectorContent(0);
-   PVector vertexNormal = vertex.getVectorContent(1);
+   PVector vertexCenter = vertex.getVectorContent("CENTER");
+   PVector vertexNormal = vertex.getVectorContent("NORMAL_0");
    ArrayList<DEC_PrimalObject> contFaces = primalFacesContaining(vertex);
    ArrayList<DEC_PrimalObject> contEdges = primalEdgesContainingVertex(vertex);
-   ArrayList<PVector> dualVertices = new ArrayList<PVector>();
+   ArrayList<PVector> contFaceCenters = new ArrayList<PVector>();
    HashMap<PVector,DEC_PrimalObject> centersToFaces = new HashMap<PVector,DEC_PrimalObject>();
    for(int i=0;i<contFaces.size();i++){
-    PVector dualVertex = contFaces.get(i).getVectorContent(0);
-    dualVertices.add(dualVertex);
-    centersToFaces.put(dualVertex, contFaces.get(i));
+    PVector faceCenter = contFaces.get(i).getVectorContent("CENTER");
+    contFaceCenters.add(faceCenter);
+    centersToFaces.put(faceCenter, contFaces.get(i));
    }
-   ArrayList<PVector> sortedVertices = GeometricUtils.sortPoints(dualVertices, vertexNormal, vertexCenter);
+   ArrayList<PVector> sortedFaceCenters = GeometricUtils.sortPoints(contFaceCenters, vertexNormal, vertexCenter);
+   
    int[] dualFaceIndices = new int[contFaces.size()];
-   for(int i=0;i<sortedVertices.size();i++){
-    dualFaceIndices[i] = centersToFaces.get(sortedVertices.get(i)).getIndex();
+   for(int i=0;i<sortedFaceCenters.size();i++){
+    dualFaceIndices[i] = centersToFaces.get(sortedFaceCenters.get(i)).getIndex();
    }
    DEC_DualObject dualFace = new DEC_DualObject(new IndexSet(dualFaceIndices),dualFaceIndex,'f');
-   ArrayList<PVector> dualFaceVectorContent = container.getObjectVectorContent(dualFace);
-   for(int i=0;i<dualFaceVectorContent.size();i++){
-    dualFace.addToVectorContent(dualFaceVectorContent.get(i));
-   }
+   dualFace.setNumExtraNormals(dualFaceIndices.length);
+   HashMap<String,PVector> dualFaceVectorContent = container.createObjectVectorContent(dualFace);
+   dualFace.addToVectorContent(dualFaceVectorContent);
    ArrayList<PVector> dualFaceAdditionalContent = new ArrayList<PVector>();
    boolean isBorder = false;
    for(int i=0;i<contEdges.size();i++){
-    dualFaceAdditionalContent.add(contEdges.get(i).getVectorContent(0));
+    dualFaceAdditionalContent.add(contEdges.get(i).getVectorContent("CENTER"));
     isBorder = isBorder || contEdges.get(i).isBorder();
    }
    dualFace.setExtraGeometricContent(dualFaceAdditionalContent);
@@ -174,10 +169,8 @@ public class DEC_Complex {
   for(int i=0;i<primalVertexInformation.size();i++){
    IndexSet vertSet = new IndexSet(i);
    DEC_PrimalObject vertex = new DEC_PrimalObject(new IndexSet(i),i);
-   ArrayList<PVector> vertVectorContent = container.getObjectVectorContent(vertex);
-   for(int j=0;j<vertVectorContent.size();j++){
-    vertex.addToVectorContent(vertVectorContent.get(j));
-   }
+   HashMap<String,PVector> vectContent = container.createObjectVectorContent(vertex);
+   vertex.addToVectorContent(vectContent);
    addObject(vertex);
   }
   System.out.println("primal vertices created: "+primalVertices.size());
@@ -186,10 +179,8 @@ public class DEC_Complex {
   for(int i=0;i<primalFaceIndices.size();i++){
    IndexSet faceIndices = primalFaceIndices.get(i);
    DEC_PrimalObject face = new DEC_PrimalObject(faceIndices,i);
-   ArrayList<PVector> faceVectorContent = container.getObjectVectorContent(face);
-   for(int k=0;k<faceVectorContent.size();k++){
-    face.addToVectorContent(faceVectorContent.get(k));
-   }
+   HashMap<String,PVector> vectContent = container.createObjectVectorContent(face);
+   face.addToVectorContent(vectContent);
    int decOrientation = faceIndices.sortVertices();
    int surfaceOrientation = container.calculateObjectOrientation(face);
    face.setOrientation(surfaceOrientation*decOrientation);
@@ -203,10 +194,8 @@ public class DEC_Complex {
    for(int j=0;j<boundEdges.size();j++){
     DEC_PrimalObject edge = new DEC_PrimalObject(boundEdges.get(j));
     if(objectIndexSearch(edge)==-1){
-     ArrayList<PVector> edgeVectorContent = container.getObjectVectorContent(edge);
-     for(int k=0;k<edgeVectorContent.size();k++){
-      edge.addToVectorContent(edgeVectorContent.get(k));
-     }
+     HashMap<String,PVector> vectContent = container.createObjectVectorContent(edge);
+     edge.addToVectorContent(vectContent);
      edge.setIndex(edgeIndexInComplex);
      addObject(edge);
      edgeIndexInComplex++;

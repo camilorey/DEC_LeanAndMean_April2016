@@ -4,6 +4,7 @@
  * and open the template in the editor.
  */
 package dec_april01_2016;
+
 import com.sun.glass.events.KeyEvent;
 import complex.DEC_Complex;
 import complex.DEC_DualObject;
@@ -12,22 +13,19 @@ import complex.DEC_Object;
 import complex.DEC_PrimalObject;
 import containers.DEC_GeometricContainer;
 import exceptions.DEC_Exception;
+import fieldsAndForms.ScalarField;
+import fieldsAndForms.VectorField;
 import java.util.ArrayList;
 import java.util.HashMap;
 import processing.core.PApplet;
-import static processing.core.PApplet.println;
-import static processing.core.PConstants.LEFT;
-import static processing.core.PConstants.RIGHT;
 import processing.core.PGraphics;
 import processing.core.PImage;
 import processing.core.PVector;
 import processing.event.MouseEvent;
 import readers.OBJMeshReader;
 import viewers.MeshViewer;
-import static processing.core.PApplet.println;
-import static processing.core.PApplet.println;
-import static processing.core.PApplet.println;
 import utils.GeometricUtils;
+
 /**
  *
  * @author laptop
@@ -53,30 +51,26 @@ public class DEC_April01_2016 extends PApplet{
  //----------------MODEL READER-------------------------------------
  //-----------------------------------------------------------------
  //String modelName = "hombre2Triangulado.obj";
- //String modelName = "male.obj";
+ // String modelName = "male.obj";
  String modelName = "hand.obj";
  //String modelName = "head.obj";
  //String modelName = "toroTriangulatoTexturizado.obj";
  //String modelName = "toroTrianguladoTexturizado_MasDetalle.obj";
  //String modelName = "bunnyWithNormals.obj";
- boolean withTexture = false;
+ boolean withTexture;
  long startTime,endTime;
  OBJMeshReader myReader;
  DEC_GeometricContainer myContainer;
  DEC_Complex myComplex;
  //-----------------------------------------------------------------
- //----------MODEL VISUALIZATION PARAMETERS-------------------------
- //-----------------------------------------------------------------
- int numElement = 0;
- //-----------------------------------------------------------------
- //----------MODEL VISUALIZATION PARAMETERS-------------------------
- //-----------------------------------------------------------------
-
- 
- //-----------------------------------------------------------------
  //-------------TEXTURE MAP HANDLER---------------------------------
  //-----------------------------------------------------------------
  PImage texture;
+ //-----------------------------------------------------------------
+ //----------------FIELDS AND FORMS---------------------------------
+ //-----------------------------------------------------------------
+ ScalarField myField;
+ VectorField myVectorField;
  public void setup(){
   size(1500,800,P3D);
   colorMode(HSB);
@@ -88,6 +82,7 @@ public class DEC_April01_2016 extends PApplet{
   selectedItem = new int[]{0,0,0,0,0,0};
   complexLimits = new int[]{0,0,0,0,0,0};
   loadComplex(modelName, "BARYCENTRIC",withTexture);
+  createVectorField();
  }
  public void mouseDragged(){
   rotX += (mouseX-pmouseX)*0.01f;
@@ -134,47 +129,6 @@ public class DEC_April01_2016 extends PApplet{
     }
    }
   }
-  //-----------------------------------------------------------------
-  //--------------SELECTION TYPE-------------------------------------
-  //-----------------------------------------------------------------
-  int[] selectionKeyOptions = new int[]{KeyEvent.VK_F1,KeyEvent.VK_F2,KeyEvent.VK_F3,
-                                       KeyEvent.VK_F4,KeyEvent.VK_F5,KeyEvent.VK_F6};
-  for(int i=0;i<showComplexKeyOptions.length;i++){
-   if(keyCode == selectionKeyOptions[i]){
-    selectionType[i] = true;
-    for(int j=0;j<selectionType.length;j++){
-     if(i!=j){
-      selectionType[j] = false;
-     }
-    }
-   }
-  }
-  if(keyCode == LEFT){
-   for(int i=0;i<selectedItem.length;i++){
-    if(selectionType[i]){
-     if(selectedItem[i]>0){
-      selectedItem[i]--;
-     }
-    }
-   }
-   numElement--;
-   if(numElement <0){
-    numElement = myComplex.numDualEdges()-1;
-   }
-  }
-  if(keyCode == RIGHT){
-   for(int i=0;i<selectedItem.length;i++){
-    if(selectionType[i]){
-     if(selectedItem[i]<complexLimits[i]){
-      selectedItem[i]++;
-     }
-    }
-   }
-   numElement++;
-   if(numElement> myComplex.numDualEdges()-1){
-    numElement = 0;
-   }
-  }
   //-----------------------------------------------------------------------
  }
  public void mouseWheel(MouseEvent e){
@@ -213,98 +167,77 @@ public class DEC_April01_2016 extends PApplet{
    myComplex.printComplexInformation();
    System.out.println("DEC Complex creation finished. Elapsed time: "+(endTime-startTime));
    System.out.println("------------------------------------------------------");
+   
    complexLimits = new int[]{myComplex.numPrimalVertices(),myComplex.numPrimalEdges(),myComplex.numPrimalFaces(),
                              myComplex.numDualVertices(),myComplex.numDualEdges(),myComplex.numDualFaces()};
+   System.out.println("Euler Characteristic: "+(myComplex.numPrimalVertices()-myComplex.numPrimalEdges()+myComplex.numPrimalFaces()));
   }catch(DEC_Exception ex){
    System.out.println("something went wrong trying to create Complex");
   }
  }
- public void drawComplex(int dimension, char type){
-  DEC_Iterator iter = myComplex.createIterator(dimension, type);
-  while(iter.hasNext()){
-   try{
-    if(type == 'p'){
-     DEC_PrimalObject op = (DEC_PrimalObject) iter.next();
-     myViewer.drawObject(op, myContainer,false);
-    }else{
-     DEC_DualObject od = (DEC_DualObject) iter.next();
-     myViewer.drawObject(od,myContainer,false);
-    }
-   }catch(DEC_Exception ex){
-     System.out.println("something went wrong plotting object");
-   }
-  }
- }
- public void drawComplex(int dimension, char type, PImage textureImage){
-  DEC_Iterator iter = myComplex.createIterator(dimension, type);
-  while(iter.hasNext()){
-   try{
-    if(type == 'p'){
-     DEC_PrimalObject op = (DEC_PrimalObject) iter.next();
-     if(op.dimension()==2){
-      myViewer.drawObject(op, myContainer, false, textureImage);
-     }else{
-      myViewer.drawObject(op, myContainer,false);
-     }
-    }else{
-     DEC_DualObject od = (DEC_DualObject) iter.next();
-     myViewer.drawObject(od,myContainer,false);
-    }
-   }catch(DEC_Exception ex){
-     System.out.println("something went wrong plotting object");
-   }
-  }
- }
- public void showNeighborhood(int numElement){
+ public void createScalarField(){
+  myField = new ScalarField(2,'p');
   try{
-   DEC_PrimalObject selectedObject = myComplex.getPrimalObject(0, numElement);
-   DEC_Iterator neighborhoodIterator = myComplex.objectNeighborhood(selectedObject);
-   fill(255,255,255);
-   myViewer.drawObject(selectedObject, myContainer, true);
-   while(neighborhoodIterator.hasNext()){
-    fill(120,255,255);
-    myViewer.drawObject(neighborhoodIterator.next(), myContainer, true);
-   }
-  }catch(DEC_Exception exception){
-    System.out.println("something went wrong trying to draw neighborhood: ");
-    exception.printStackTrace();
+   println("creating scalar Field");
+   myField.calculateField(myComplex);
+   
+  }catch(DEC_Exception ex){
+   println("something went wrong trying to calculate scalar field");
+   ex.printStackTrace();
+  }
+ }
+ public void createVectorField(){
+  myVectorField = new VectorField(0,'p');
+  try{
+   myVectorField.calculateField(myComplex);
+  }catch(DEC_Exception ex){
+   println("something went wrong trying to calculate vector field");
+   ex.printStackTrace();
   }
  }
  public void showComplex(){
   if(showComplexOption[2]){
    fill(200);
-   if(withTexture){
-    drawComplex(2,'p',texture);
-   }else{
-    drawComplex(2,'p'); 
-   }
+   myViewer.plotComplex(myComplex, myContainer, 2, 'p');
+   //myViewer.plotComplex(myComplex, myContainer, 2, 'p',myField, true);
+   //myViewer.plotComplex(myComplex, myContainer, 2, 'p', myVectorField, 20);
   }
   if(showComplexOption[5]){
    fill(200);
-   drawComplex(2,'d');
+   myViewer.plotComplex(myComplex, myContainer, 2, 'd');
+   //myViewer.plotComplex(myComplex, myContainer, 2, 'd',myField, false);
+   //myViewer.plotComplex(myComplex, myContainer, 2, 'd', myVectorField, 20);
   }
   if(showComplexOption[1]){
    stroke(0);
    strokeWeight(1);
-   drawComplex(1,'p');
+   myViewer.plotComplex(myComplex, myContainer, 1, 'p');
+   //myViewer.plotComplex(myComplex, myContainer, 1, 'p',myField, false);
+   //myViewer.plotComplex(myComplex, myContainer, 1, 'p', myVectorField, 20);
   }
   if(showComplexOption[4]){
    stroke(0);
    strokeWeight(1);
-   drawComplex(1,'d');
+   myViewer.plotComplex(myComplex, myContainer, 1, 'd');
+   //myViewer.plotComplex(myComplex, myContainer, 1, 'd',myField, false);
+   //myViewer.plotComplex(myComplex, myContainer, 1, 'd', myVectorField, 20);
   }
   if(showComplexOption[0]){
    fill(255,255,255);
-   drawComplex(0,'p');
+   myViewer.plotComplex(myComplex, myContainer, 0, 'p');
+   //myViewer.plotComplex(myComplex, myContainer, 0, 'p',myField, false);
+   //myViewer.plotComplex(myComplex, myContainer, 0, 'p', myVectorField, 20);
   }
   if(showComplexOption[3]){
    fill(100,255,255);
-   drawComplex(0,'d');
+   myViewer.plotComplex(myComplex, myContainer, 0, 'd');
+   //myViewer.plotComplex(myComplex, myContainer, 0, 'd',myField, false);
+   //myViewer.plotComplex(myComplex, myContainer, 0, 'd', myVectorField, 20);
   }
  }
  public void drawContent(){
-  //myViewer.strokeWeight(1);
-  //myViewer.drawBoundingBox();
+  myViewer.strokeWeight(1);
+  myViewer.plotBoundingBox();
   showComplex();
   //drawCurvatureForm();
   //showNeighborhood(numElement);
