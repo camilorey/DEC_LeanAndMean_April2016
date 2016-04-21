@@ -200,9 +200,9 @@ public class MeshViewer {
      faceNormals.add(object.getVectorContent("NORMAL_"+i));
     }
     if(((DEC_DualObject)object).getExtraGeometricContent()!= null){
-     drawDualFaceWithExtraContent(verts,((DEC_DualObject)object).getExtraGeometricContent() , faceCenter, faceNormal, selected || object.isBorder());
+     drawDualFace(((DEC_DualObject)object).getExtraGeometricContent(), faceCenter,selected || object.isBorder());
     }else{
-     drawDualFace(verts, faceCenter,faceNormal ,faceNormals,selected || object.isBorder());
+     drawDualFace(verts, faceCenter,selected || object.isBorder());
     }
    }
   }
@@ -240,9 +240,9 @@ public class MeshViewer {
      faceNormals.add(object.getVectorContent("NORMAL_"+i));
     }
     if(((DEC_DualObject)object).getExtraGeometricContent()!= null){
-     drawDualFaceWithExtraContent(verts,((DEC_DualObject)object).getExtraGeometricContent() , faceCenter, faceNormal, selected || object.isBorder());
+     drawDualFace(((DEC_DualObject)object).getExtraGeometricContent(), faceCenter,selected || object.isBorder());
     }else{
-     drawDualFace(verts, faceCenter,faceNormal ,faceNormals,selected || object.isBorder());
+     drawDualFace(verts, faceCenter,selected || object.isBorder());
     }
    }
   }
@@ -315,9 +315,9 @@ public class MeshViewer {
     parent.fill(150);
    }
    if (((DEC_DualObject) object).getExtraGeometricContent() != null) {
-    drawDualFaceWithExtraContent(verts, ((DEC_DualObject) object).getExtraGeometricContent(), faceCenter, faceNormal, selected || object.isBorder());
+   drawDualFace(((DEC_DualObject)object).getExtraGeometricContent(), faceCenter,selected || object.isBorder());
    } else {
-    drawDualFace(verts, faceCenter, faceNormal, faceNormals, selected || object.isBorder());
+    drawDualFace(verts, faceCenter,selected || object.isBorder());
    }
   }
  }
@@ -481,23 +481,17 @@ public class MeshViewer {
     parent.endShape(PApplet.CLOSE);
   }
  }
- public void drawDualFace(ArrayList<PVector> verts, PVector faceCenter,PVector faceNormal,ArrayList<PVector> normals,boolean selected){
-  if(verts.size()==normals.size()){
+ public void drawDualFace(ArrayList<PVector> verts, PVector faceCenter,boolean selected){
+  if(verts.size()>0){
    int N = verts.size();
    parent.noStroke();
    for(int i=0;i<N;i++){
     PVector c = new PVector(faceCenter.x*modelWHD[0],faceCenter.y*modelWHD[1],faceCenter.z*modelWHD[2]);
     PVector v1 = new PVector(verts.get(i).x*modelWHD[0],verts.get(i).y*modelWHD[1],verts.get(i).z*modelWHD[2]);
     PVector v2 = new PVector(verts.get((i+1)%N).x*modelWHD[0],verts.get((i+1)%N).y*modelWHD[1],verts.get((i+1)%N).z*modelWHD[2]);
-    PVector n = faceNormal;
-    PVector n1 = normals.get(i);
-    PVector n2 = normals.get((i+1)%N);
     parent.beginShape();
-     parent.normal(n.x, n.y, n.z);
      parent.vertex(c.x,c.y,c.z);
-     parent.normal(n1.x, n1.y, n1.z);
      parent.vertex(v1.x,v1.y,v1.z);
-     parent.normal(n2.x, n2.y, n2.z);
      parent.vertex(v2.x,v2.y,v2.z);
     parent.endShape(PApplet.CLOSE);
    }

@@ -146,14 +146,14 @@ public class DEC_Complex {
    dualFace.setNumExtraNormals(dualFaceIndices.length);
    HashMap<String,PVector> dualFaceVectorContent = container.createObjectVectorContent(dualFace);
    dualFace.addToVectorContent(dualFaceVectorContent);
-   ArrayList<PVector> dualFaceAdditionalContent = new ArrayList<PVector>();
+   ArrayList<PVector> contEdgesCenters = new ArrayList<PVector>();
    boolean isBorder = false;
    for(int i=0;i<contEdges.size();i++){
-    dualFaceAdditionalContent.add(contEdges.get(i).getVectorContent("CENTER"));
+    contEdgesCenters.add(contEdges.get(i).getVectorContent("CENTER"));
     isBorder = isBorder || contEdges.get(i).isBorder();
    }
-   dualFace.setExtraGeometricContent(dualFaceAdditionalContent);
-   dualFace.setOrientation(dualFaceIndices.length %2 == 0?1:-1);
+   dualFace.createExtraGeometricContent(contFaceCenters, contEdgesCenters);
+   dualFace.setOrientation(vertex.getOrientation());
    if(isBorder){
     vertex.markAsBorder();
     dualFace.markAsBorder();

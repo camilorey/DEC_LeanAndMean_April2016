@@ -173,7 +173,17 @@ public class DEC_DualObject extends DEC_Object {
  public ArrayList<PVector> getExtraGeometricContent() {
   return extraGeometricContent;
  }
-
+ public void createExtraGeometricContent(ArrayList<PVector> fCenters, ArrayList<PVector> eCenters) throws DEC_Exception{
+  ArrayList<PVector> realVertices = new ArrayList<PVector>();
+  for(int i=0;i<fCenters.size();i++){
+   realVertices.add(fCenters.get(i));
+  }
+  for(int i=0;i<eCenters.size();i++){
+   realVertices.add(eCenters.get(i));
+  }
+  this.extraGeometricContent = GeometricUtils.sortPoints(realVertices, getVectorContent("NORMAL_0"), getVectorContent("CENTER"));
+  //this.extraGeometricContent = realVertices;
+ }
  public void setExtraGeometricContent(ArrayList<PVector> extraGeometricContent) {
   this.extraGeometricContent = extraGeometricContent;
  }
