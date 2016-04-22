@@ -61,7 +61,9 @@ public class IndexSet {
           indices.add(new Integer(inds[i]));
          }
 	}
-	
+	public IndexSet(ArrayList<Integer> inds){
+         this.indices = inds;
+        }
 	public int size() {
 	 return indices.size();
 	}

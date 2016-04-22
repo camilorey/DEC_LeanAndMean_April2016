@@ -195,10 +195,6 @@ public class MeshViewer {
    }else if(object instanceof DEC_DualObject){
     PVector faceCenter = object.getVectorContent("CENTER");
     PVector faceNormal = object.getVectorContent("NORMAL_0");
-    ArrayList<PVector> faceNormals = new ArrayList<PVector>();
-    for(int i=1;i<=((DEC_DualObject) object).getNumExtraNormals();i++){
-     faceNormals.add(object.getVectorContent("NORMAL_"+i));
-    }
     if(((DEC_DualObject)object).getExtraGeometricContent()!= null){
      drawDualFace(((DEC_DualObject)object).getExtraGeometricContent(), faceCenter,selected || object.isBorder());
     }else{
@@ -235,10 +231,6 @@ public class MeshViewer {
    }else if(object instanceof DEC_DualObject){
     PVector faceCenter = object.getVectorContent("CENTER");
     PVector faceNormal = object.getVectorContent("NORMAL_0");
-    ArrayList<PVector> faceNormals = new ArrayList<PVector>();
-    for(int i=1;i<((DEC_DualObject) object).getNumExtraNormals();i++){
-     faceNormals.add(object.getVectorContent("NORMAL_"+i));
-    }
     if(((DEC_DualObject)object).getExtraGeometricContent()!= null){
      drawDualFace(((DEC_DualObject)object).getExtraGeometricContent(), faceCenter,selected || object.isBorder());
     }else{
@@ -305,10 +297,6 @@ public class MeshViewer {
   }else if (object instanceof DEC_DualObject) {
    PVector faceCenter = object.getVectorContent("CENTER");
    PVector faceNormal = object.getVectorContent("NORMAL_0");
-   ArrayList<PVector> faceNormals = new ArrayList<PVector>();
-   for (int i = 1; i < ((DEC_DualObject) object).getNumExtraNormals(); i++) {
-    faceNormals.add(object.getVectorContent("NORMAL_" + i));
-   }
    if(field.getDimension()==object.dimension() && field.getType()=='d'){
     parent.fill(255*field.getValueLookUpTable().get(faceCenter).floatValue(),255,255);
    }else{
@@ -459,48 +447,32 @@ public class MeshViewer {
   }
   parent.endShape(PApplet.CLOSE);
  }
- public void drawDualFaceWithExtraContent(ArrayList<PVector> verts,ArrayList<PVector> extra ,PVector faceCenter, PVector faceNormal,boolean selected){
-  ArrayList<PVector> totalVerts = new ArrayList<PVector>();
-  for(int i=0;i<verts.size();i++){
-   totalVerts.add(verts.get(i));
-  }
-  for(int i=0;i<extra.size();i++){
-   totalVerts.add(extra.get(i));
-  }
-  ArrayList<PVector> sortedTotal = GeometricUtils.sortPoints(totalVerts, faceNormal, faceCenter);
-  int M = sortedTotal.size();
-  parent.noStroke();
-  for(int i=0;i<M;i++){
-   PVector c = new PVector(faceCenter.x*modelWHD[0],faceCenter.y*modelWHD[1],faceCenter.z*modelWHD[2]);
-   PVector v1 = new PVector(sortedTotal.get(i).x*modelWHD[0],sortedTotal.get(i).y*modelWHD[1],sortedTotal.get(i).z*modelWHD[2]);
-   PVector v2 = new PVector(sortedTotal.get((i+1)%M).x*modelWHD[0],sortedTotal.get((i+1)%M).y*modelWHD[1],sortedTotal.get((i+1)%M).z*modelWHD[2]);
-   parent.beginShape();  
-     parent.vertex(c.x,c.y,c.z);
-     parent.vertex(v1.x,v1.y,v1.z);
-     parent.vertex(v2.x,v2.y,v2.z);
-    parent.endShape(PApplet.CLOSE);
-  }
- }
  public void drawDualFace(ArrayList<PVector> verts, PVector faceCenter,boolean selected){
   if(verts.size()>0){
    int N = verts.size();
-   parent.noStroke();
-   for(int i=0;i<N;i++){
-    PVector c = new PVector(faceCenter.x*modelWHD[0],faceCenter.y*modelWHD[1],faceCenter.z*modelWHD[2]);
+   PVector c = new PVector(verts.get(0).x*modelWHD[0],verts.get(0).y*modelWHD[1],verts.get(0).z*modelWHD[2]);
+   for(int i=1;i<N;i++){ 
+    float u = (float) i / (float) N;
     PVector v1 = new PVector(verts.get(i).x*modelWHD[0],verts.get(i).y*modelWHD[1],verts.get(i).z*modelWHD[2]);
-    PVector v2 = new PVector(verts.get((i+1)%N).x*modelWHD[0],verts.get((i+1)%N).y*modelWHD[1],verts.get((i+1)%N).z*modelWHD[2]);
-    parent.beginShape();
-     parent.vertex(c.x,c.y,c.z);
-     parent.vertex(v1.x,v1.y,v1.z);
-     parent.vertex(v2.x,v2.y,v2.z);
-    parent.endShape(PApplet.CLOSE);
+    PVector v2 = null;
+    if(i<N-1){
+     v2 = new PVector(verts.get(i+1).x*modelWHD[0],verts.get(i+1).y*modelWHD[1],verts.get(i+1).z*modelWHD[2]);
+    }else{
+     v2 = new PVector(verts.get(1).x*modelWHD[0],verts.get(1).y*modelWHD[1],verts.get(1).z*modelWHD[2]);
+    }
+    parent.stroke(0);
+    parent.strokeWeight(4);
+    parent.line(v1.x,v1.y,v1.z,v2.x,v2.y,v2.z);
+    parent.strokeWeight(1);
+    parent.line(c.x,c.y,c.z,v1.x,v1.y,v1.z);
+    parent.line(c.x,c.y,c.z,v2.x,v2.y,v2.z);
    }
    if(selected){
     parent.noFill();
     parent.stroke(255,255,255);
     parent.strokeWeight(3);
     parent.beginShape();
-    for(int i=0;i<N;i++){
+    for(int i=1;i<N;i++){
      PVector v1 = new PVector(verts.get(i).x*modelWHD[0],verts.get(i).y*modelWHD[1],verts.get(i).z*modelWHD[2]);
      parent.vertex(v1.x,v1.y,v1.z);
     }

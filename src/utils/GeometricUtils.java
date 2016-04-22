@@ -99,24 +99,29 @@ public class GeometricUtils {
  }
  public static ArrayList<PVector> sortPoints(ArrayList<PVector> p, PVector normal, PVector center){
   ArrayList<PVector> tempPoints = new ArrayList<PVector>();
+  int firstIndex = -1;
+  float minY = 100000;
   for(int i=0;i<p.size();i++){
    tempPoints.add(p.get(i));
+   if(minY>p.get(i).y){
+    minY = p.get(i).y;
+    firstIndex = i;
+   }
   }
   ArrayList<PVector> sortedPoints = new ArrayList<PVector>();
+  PVector temp = tempPoints.get(firstIndex);
+  PVector first = tempPoints.get(0);
+  tempPoints.set(firstIndex, first);
+  tempPoints.set(0,temp);
   PVector firstVertex = tempPoints.remove(0);
   sortedPoints.add(firstVertex);
-  String angleString = "";
-  for(int i=0;i<tempPoints.size();i++){
-   double angle = angleBetweenVectors(center,normal,firstVertex,tempPoints.get(i));
-   angleString += Math.toDegrees(angle)+ " ";
-  }
   //System.out.println("before sorting: "+angleString);
   while(!tempPoints.isEmpty()){
    double minAngle = 10000.0d;
    int minAngleIndex = -1;
    for(int i=0;i<tempPoints.size();i++){
     double angle = angleBetweenVectors(center,normal,firstVertex,tempPoints.get(i));
-    if(angle <= minAngle){
+    if(angle <minAngle){
      minAngle = angle;
      minAngleIndex = i;
     }
@@ -124,11 +129,6 @@ public class GeometricUtils {
    if(minAngleIndex != -1){
     sortedPoints.add(tempPoints.remove(minAngleIndex));
    }
-  }
-  angleString = "";
-  for(int i=0;i<sortedPoints.size();i++){
-   double angle = angleBetweenVectors(center,normal,firstVertex,sortedPoints.get(i));
-   angleString += Math.toDegrees(angle)+ " ";
   }
   //System.out.println("after sorting: "+angleString);
   //return p;
@@ -139,7 +139,7 @@ public class GeometricUtils {
   PVector q = PVector.sub(B,pivot);
   float dot = p.dot(q);
   float area = p.cross(q).mag();
-  int sign = normal.dot(q.cross(p))>=0 ? 1: -1;
+  int sign = normal.dot(p.cross(q))>=0 ? 1: -1;
   if(area == 0 && dot == 0){
    return 0;
   }else if(area == 0 && dot !=0){
@@ -205,10 +205,24 @@ public class GeometricUtils {
   return A.dot(B)>=0? 1: -1;
  }
  public static float surfaceArea(ArrayList<PVector> v){
-  return 0;
+  float totalArea = 0;
+  PVector c = v.get(0);
+  for(int i=1;i<v.size();i++){
+   PVector v1 = v.get(i);
+   PVector v2 = null;
+   if(i<v.size()-1){
+    v2 = v.get(i+1);
+   }else{
+    v2 = v.get(1);
+   }
+   PVector d1 = PVector.sub(c,v1);
+   PVector d2 = PVector.sub(c,v2);
+   totalArea += d1.cross(d2).mag()/2.0f;
+  }
+  return totalArea;
  }
  public static float cellVolume(ArrayList<PVector> v){
-  return 0;
+  return 1;
  }
  public static float determinant2x2(float[][] A){
   return A[0][0]*A[1][1]-A[0][1]*A[1][0];

@@ -5,6 +5,9 @@
  */
 package utils;
 
+import fieldsAndForms.ScalarField;
+import processing.core.PVector;
+
 /**
  *
  * @author laptop
@@ -36,6 +39,12 @@ public class CalculationUtils {
   }else{
    return null;
   }
+ }
+ public static float lineIntegral(ScalarField f,PVector v1, PVector v2){
+  float result = 0;
+  float dist = v1.dist(v2);
+  
+  return result;
  }
  public static Double gaussianSum(Double[] values, int gaussianOrder){
   Double result = new Double(0);

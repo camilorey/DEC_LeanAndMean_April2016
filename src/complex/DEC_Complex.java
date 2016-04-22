@@ -77,11 +77,11 @@ public class DEC_Complex {
  }
  public void setComplex(DEC_GeometricContainer container,OBJMeshReader mesh)throws DEC_Exception{
   setPrimalComplex(container);
-  setDualComplex(container);
+  setDualComplex2(container);
  }
- public void setDualComplex(DEC_GeometricContainer container) throws DEC_Exception{
+ public void setDualComplex2(DEC_GeometricContainer container) throws DEC_Exception{
   //create dual vertices from primal faces
-  DEC_Iterator faceIterator = createIterator(2, 'p');
+  DEC_Iterator faceIterator = createIterator(2,'p');
   while(faceIterator.hasNext()){
    DEC_PrimalObject face = (DEC_PrimalObject) faceIterator.next();
    DEC_DualObject dualVert = new DEC_DualObject(new IndexSet(face.getIndex()),face.getIndex(),'v');
@@ -89,34 +89,38 @@ public class DEC_Complex {
    dualVert.addToVectorContent(vecContent);
    addObject(dualVert);
   }
-  System.out.println("dual vertices created: "+dualVertices.size());
-  //create dual edges from primal edges
+  System.out.println("Dual vertices created: "+dualVertices.size());
   DEC_Iterator edgeIterator = createIterator(1,'p');
   while(edgeIterator.hasNext()){
    DEC_PrimalObject edge = (DEC_PrimalObject) edgeIterator.next();
-   ArrayList<DEC_PrimalObject> contFaces = primalFacesContaining(edge);
-   int fi0 = -1, fi1=-1;
-   int faceOrientation = 1;
+   ArrayList<DEC_PrimalObject> ring = primalRing(edge);
+   int i0=-1;
+   int i1=-1;
+   int dualEdgeOrientation = edge.getOrientation();
+   boolean dualBorder = false;
    DEC_DualObject dualEdge = null;
-   if(contFaces.size()==2){
-    DEC_PrimalObject f0 = contFaces.get(0);
-    DEC_PrimalObject f1 = contFaces.get(1);
-    fi0 = f0.getIndex();
-    fi1 = f1.getIndex();
-    faceOrientation = f0.getOrientation(); 
-    dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
-   }else if(contFaces.size()==1){
-    DEC_PrimalObject f0 = contFaces.get(0);
+   if(ring.size()==2){
+    i0 = ring.get(1).getIndex();
+    i1 = ring.get(1).getIndex();
+    dualEdgeOrientation *= ring.get(1).getOrientation();
     edge.markAsBorder();
-    fi0 = f0.getIndex();
-    fi1 = f0.getIndex();
-    faceOrientation = f0.getOrientation();
-    dualEdge = new DEC_DualObject(new IndexSet(new int[]{fi0,fi1}), edge.getIndex(),'e');
+    dualBorder = true;
+    dualEdge = new DEC_DualObject(new IndexSet(new int[]{i0,i1}), edge.getIndex(),'e');
+    dualEdge.addToVectorContent("CENTER", edge.getVectorContent("CENTER"));
+   }else{
+    i0 = ring.get(1).getIndex();
+    i1 = ring.get(2).getIndex();
+    dualEdgeOrientation *= ring.get(1).getOrientation();
+    dualBorder = false;
+    dualEdge = new DEC_DualObject(new IndexSet(new int[]{i0,i1}), edge.getIndex(),'e');
+    HashMap<String,PVector> vecContent = container.createObjectVectorContent(dualEdge);
+    dualEdge.addToVectorContent(vecContent);
+    dualEdge.addToVectorContent("CENTER", edge.getVectorContent("CENTER"));
+   }
+   dualEdge.setOrientation(dualEdgeOrientation);
+   if(dualBorder){
     dualEdge.markAsBorder();
    }
-   HashMap<String,PVector> vecContent = container.createObjectVectorContent(dualEdge);
-   dualEdge.addToVectorContent("CENTER", edge.getVectorContent("CENTER"));
-   dualEdge.setOrientation(faceOrientation*edge.getOrientation());
    addObject(dualEdge);
   }
   System.out.println("dual edges created: "+dualEdges.size());
@@ -124,36 +128,23 @@ public class DEC_Complex {
   DEC_Iterator vertexIterator = createIterator(0,'p');
   while(vertexIterator.hasNext()){
    DEC_PrimalObject vertex = (DEC_PrimalObject) vertexIterator.next();
-   int dualFaceIndex = vertex.getIndex();
-   PVector vertexCenter = vertex.getVectorContent("CENTER");
-   PVector vertexNormal = vertex.getVectorContent("NORMAL_0");
-   ArrayList<DEC_PrimalObject> contFaces = primalFacesContaining(vertex);
-   ArrayList<DEC_PrimalObject> contEdges = primalEdgesContainingVertex(vertex);
-   ArrayList<PVector> contFaceCenters = new ArrayList<PVector>();
-   HashMap<PVector,DEC_PrimalObject> centersToFaces = new HashMap<PVector,DEC_PrimalObject>();
-   for(int i=0;i<contFaces.size();i++){
-    PVector faceCenter = contFaces.get(i).getVectorContent("CENTER");
-    contFaceCenters.add(faceCenter);
-    centersToFaces.put(faceCenter, contFaces.get(i));
-   }
-   ArrayList<PVector> sortedFaceCenters = GeometricUtils.sortPoints(contFaceCenters, vertexNormal, vertexCenter);
-   
-   int[] dualFaceIndices = new int[contFaces.size()];
-   for(int i=0;i<sortedFaceCenters.size();i++){
-    dualFaceIndices[i] = centersToFaces.get(sortedFaceCenters.get(i)).getIndex();
-   }
-   DEC_DualObject dualFace = new DEC_DualObject(new IndexSet(dualFaceIndices),dualFaceIndex,'f');
-   dualFace.setNumExtraNormals(dualFaceIndices.length);
-   HashMap<String,PVector> dualFaceVectorContent = container.createObjectVectorContent(dualFace);
-   dualFace.addToVectorContent(dualFaceVectorContent);
-   ArrayList<PVector> contEdgesCenters = new ArrayList<PVector>();
+   ArrayList<DEC_PrimalObject> ring = primalRing(vertex);
+   ArrayList<Integer> dualFaceIndices = new ArrayList<Integer>();
+   ArrayList<PVector> dualFaceGeometricVerts = new ArrayList<PVector>();
+   ArrayList<PVector> dualFaceExtraNormals = new ArrayList<PVector>();
    boolean isBorder = false;
-   for(int i=0;i<contEdges.size();i++){
-    contEdgesCenters.add(contEdges.get(i).getVectorContent("CENTER"));
-    isBorder = isBorder || contEdges.get(i).isBorder();
+   for(int i=0;i<ring.size();i++){
+    if(ring.get(i).dimension()==2){
+     dualFaceIndices.add(ring.get(i).getIndex());
+    }
+    isBorder = isBorder || ring.get(i).isBorder();
+    dualFaceGeometricVerts.add(ring.get(i).getVectorContent("CENTER"));
    }
-   dualFace.createExtraGeometricContent(contFaceCenters, contEdgesCenters);
+   DEC_DualObject dualFace = new DEC_DualObject(new IndexSet(dualFaceIndices),vertex.getIndex(),'f');
+   dualFace.setExtraGeometricContent(dualFaceGeometricVerts);
    dualFace.setOrientation(vertex.getOrientation());
+   dualFace.addToVectorContent("CENTER", vertex.getVectorContent("CENTER"));
+   dualFace.addToVectorContent("NORMAL_0",vertex.getVectorContent("NORMAL_0"));
    if(isBorder){
     vertex.markAsBorder();
     dualFace.markAsBorder();
@@ -567,22 +558,70 @@ public class DEC_Complex {
    } 
   }
  }
- public ArrayList<DEC_PrimalObject> primalFacesContaining(DEC_PrimalObject object) throws DEC_Exception{
-  if(object.dimension()==0){
-   return primalContainingElementsBinarySearch(object, primalFaces, 0, primalFaces.size()-1);
-  }else if(object.dimension() == 1){
-   return primalContainingElementsBinarySearch(object, primalFaces, 0, primalFaces.size()-1);
-  }else if(object.dimension()==2){
-   if(!primalTets.isEmpty()){
-    return primalContainingElementsBinarySearch(object, primalTets, 0, primalTets.size()-1);
-   }else{
-    return new ArrayList<DEC_PrimalObject>();
+ public ArrayList<DEC_PrimalObject> primalRing(DEC_PrimalObject object) throws DEC_Exception{
+  ArrayList<DEC_PrimalObject> objects = new ArrayList<DEC_PrimalObject>();
+  objects.add(object);
+  if(object.dimension() == 2){
+   return objects;
+  }else if(object.dimension()== 1){
+   ArrayList<DEC_PrimalObject> contFaces = primalFacesContaining(object);
+   for(int i=0;i<contFaces.size();i++){
+    objects.add(contFaces.get(i));
    }
+   return objects;
+  }else if(object.dimension()==0){
+   ArrayList<DEC_PrimalObject> contElements = new ArrayList<DEC_PrimalObject>();
+   ArrayList<PVector> contCenters = new ArrayList<PVector>();
+   HashMap<PVector,DEC_PrimalObject> centersToSimplices = new HashMap<PVector,DEC_PrimalObject>();
+   ArrayList<DEC_PrimalObject> contFaces = primalFacesContaining(object);
+   ArrayList<DEC_PrimalObject> contEdges = primalEdgesContaining(object);
+   for(int i=0;i<contFaces.size();i++){
+    contElements.add(contFaces.get(i));
+    centersToSimplices.put(contFaces.get(i).getVectorContent("CENTER"), contFaces.get(i));
+    contCenters.add(contFaces.get(i).getVectorContent("CENTER"));
+   }
+   for(int i=0;i<contEdges.size();i++){
+    contElements.add(contEdges.get(i));
+    centersToSimplices.put(contEdges.get(i).getVectorContent("CENTER"), contEdges.get(i));
+    contCenters.add(contEdges.get(i).getVectorContent("CENTER"));
+   }
+   PVector vertCenter = object.getVectorContent("CENTER");
+   PVector vertNormal = object.getVectorContent("NORMAL_0");
+   ArrayList<PVector> sorted = GeometricUtils.sortPoints(contCenters, vertNormal, vertCenter);
+   for(int i=0;i<sorted.size();i++){
+    objects.add(centersToSimplices.get(sorted.get(i)));
+   }
+   return objects;
+  }else{
+   return objects;
+  }
+ }
+ public ArrayList<DEC_PrimalObject> ringOfPrimalFacesForPrimalVertex(DEC_PrimalObject vertex) throws DEC_Exception{
+  ArrayList<DEC_PrimalObject> faces = primalFacesContaining(vertex);
+  HashMap<PVector,DEC_PrimalObject> centersToFaces = new HashMap<PVector,DEC_PrimalObject>();
+  ArrayList<PVector> faceCenters = new ArrayList<PVector>();
+  for(int i=0;i< faces.size();i++){
+   PVector center = faces.get(i).getVectorContent("CENTER");
+   faceCenters.add(center);
+   centersToFaces.put(center,faces.get(i));
+  }
+  PVector vertexCenter = vertex.getVectorContent("CENTER");
+  PVector vertexNormal = vertex.getVectorContent("NORMAL_0");
+  ArrayList<PVector> sortedFaceCenters = GeometricUtils.sortPoints(faceCenters, vertexNormal, vertexCenter);
+  ArrayList<DEC_PrimalObject> sortedRing = new ArrayList<DEC_PrimalObject>();
+  for(int i=0;i<sortedFaceCenters.size();i++){
+   sortedRing.add(centersToFaces.get(sortedFaceCenters.get(i)));
+  }
+  return sortedRing;
+ }
+ public ArrayList<DEC_PrimalObject> primalFacesContaining(DEC_PrimalObject object) throws DEC_Exception{
+  if(object.dimension()>=0 && object.dimension()<2){
+   return primalContainingElementsBinarySearch(object, primalFaces, 0, primalFaces.size()-1);
   }else{
    return new ArrayList<DEC_PrimalObject>();
   }
  }
- public ArrayList<DEC_PrimalObject> primalEdgesContainingVertex(DEC_PrimalObject object) throws DEC_Exception{
+ public ArrayList<DEC_PrimalObject> primalEdgesContaining(DEC_PrimalObject object) throws DEC_Exception{
   if(object.dimension()==0){
    return primalContainingElementsBinarySearch(object, primalEdges, 0, primalEdges.size()-1);
   }else{

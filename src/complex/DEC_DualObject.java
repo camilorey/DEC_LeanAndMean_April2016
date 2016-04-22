@@ -127,13 +127,21 @@ public class DEC_DualObject extends DEC_Object {
 
  @Override
  public float volume(DEC_GeometricContainer container) throws DEC_Exception {
-  ArrayList<PVector> geometricInfo = getGeometry(container);
-  if (dimension <= 1) {
-   return GeometricUtils.volume(geometricInfo);
+  if(dimension == 0){
+   return 1;
+  }
+  else if (dimension == 1) {
+   PVector center = getVectorContent("CENTER");
+   ArrayList<PVector> verts = getGeometry(container);
+   if(isBorder()){
+    return center.dist(verts.get(0));
+   }else{
+    return center.dist(verts.get(0))+center.dist(verts.get(1));
+   }
   } else if (dimension == 2) {
-   return GeometricUtils.surfaceArea(geometricInfo);
+   return GeometricUtils.surfaceArea(extraGeometricContent);
   } else if (dimension == 3) {
-   return GeometricUtils.cellVolume(geometricInfo);
+   return GeometricUtils.cellVolume(extraGeometricContent);
   } else {
    return 0;
   }

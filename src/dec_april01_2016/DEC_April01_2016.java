@@ -25,6 +25,7 @@ import processing.event.MouseEvent;
 import readers.OBJMeshReader;
 import viewers.MeshViewer;
 import utils.GeometricUtils;
+import utils.SparseVector;
 
 /**
  *
@@ -51,7 +52,7 @@ public class DEC_April01_2016 extends PApplet{
  //----------------MODEL READER-------------------------------------
  //-----------------------------------------------------------------
  //String modelName = "hombre2Triangulado.obj";
- // String modelName = "male.obj";
+ //String modelName = "male.obj";
  String modelName = "hand.obj";
  //String modelName = "head.obj";
  //String modelName = "toroTriangulatoTexturizado.obj";
@@ -82,7 +83,7 @@ public class DEC_April01_2016 extends PApplet{
   selectedItem = new int[]{0,0,0,0,0,0};
   complexLimits = new int[]{0,0,0,0,0,0};
   loadComplex(modelName, "BARYCENTRIC",withTexture);
-  createVectorField();
+  createHodgeStar();
  }
  public void mouseDragged(){
   rotX += (mouseX-pmouseX)*0.01f;
@@ -175,26 +176,25 @@ public class DEC_April01_2016 extends PApplet{
    System.out.println("something went wrong trying to create Complex");
   }
  }
- public void createScalarField(){
-  myField = new ScalarField(2,'p');
-  try{
-   println("creating scalar Field");
-   myField.calculateField(myComplex);
-   
-  }catch(DEC_Exception ex){
-   println("something went wrong trying to calculate scalar field");
-   ex.printStackTrace();
+ public void createHodgeStar(){
+  SparseVector vertexHodge = new SparseVector(myComplex.numPrimalVertices());
+  DEC_Iterator vertexIterator = myComplex.createIterator(0, 'p');
+  while(vertexIterator.hasNext()){
+   DEC_PrimalObject primalVert = (DEC_PrimalObject) vertexIterator.next();
+   DEC_DualObject dualFace = myComplex.dual(primalVert);
+   try{
+    float volPoint = primalVert.volume(myContainer);
+    float faceVol = dualFace.volume(myContainer);
+    float hodgeContent = faceVol/volPoint;
+    println(primalVert.getIndex()+":"+hodgeContent);
+    vertexHodge.set(primalVert.getIndex(), hodgeContent);
+   }catch(DEC_Exception ex){
+    println("something went wrong trying to calculate volumes");
+    ex.printStackTrace();
+   }
   }
  }
- public void createVectorField(){
-  myVectorField = new VectorField(0,'p');
-  try{
-   myVectorField.calculateField(myComplex);
-  }catch(DEC_Exception ex){
-   println("something went wrong trying to calculate vector field");
-   ex.printStackTrace();
-  }
- }
+ 
  public void showComplex(){
   if(showComplexOption[2]){
    fill(200);
