@@ -18,13 +18,12 @@ import utils.SparseVector;
  *
  * @author laptop
  */
-public class DEC_DifferentialOperator {
- 
- protected SparseMatrix differentialMatrix;
+public class DEC_DifferentialOperator extends DEC_MatrixOperator{
  
  public DEC_DifferentialOperator() {
-  differentialMatrix = new SparseMatrix();
+  super();
  }
+ @Override
  public void calculateOperator(DEC_Complex complex,int dimension, char type) throws DEC_Exception{
   SparseMatrix boundaryMatrix; 
   if(dimension == 1 && type == 'p'){
@@ -42,7 +41,7 @@ public class DEC_DifferentialOperator {
     }
     boundaryMatrix.setRow(i, boundAsVector);
    }
-   differentialMatrix = boundaryMatrix.transpose();
+   operatorMatrix = boundaryMatrix.transpose();
   }else if(dimension == 2 && type =='p'){
    boundaryMatrix = new SparseMatrix(complex.numPrimalFaces(),complex.numPrimalEdges());
    for(int i=0;i<complex.numPrimalFaces();i++){
@@ -58,7 +57,7 @@ public class DEC_DifferentialOperator {
     }
     boundaryMatrix.setRow(i, boundAsVector);
    }
-   differentialMatrix = boundaryMatrix.transpose();
+   operatorMatrix = boundaryMatrix.transpose();
   }else if(dimension == 1 && type == 'd'){
    boundaryMatrix = new SparseMatrix(complex.numDualEdges(),complex.numDualVertices());
    for(int i=0;i<complex.numDualEdges();i++){
@@ -74,7 +73,7 @@ public class DEC_DifferentialOperator {
     }
     boundaryMatrix.setRow(i, boundAsVector);
    }
-   differentialMatrix = boundaryMatrix.transpose();
+   operatorMatrix = boundaryMatrix.transpose();
   }else if(dimension == 2 && type == 'd'){
    boundaryMatrix = new SparseMatrix(complex.numDualFaces(),complex.numDualEdges());
    for(int i=0;i<complex.numDualFaces();i++){
@@ -90,7 +89,7 @@ public class DEC_DifferentialOperator {
     }
     boundaryMatrix.setRow(i, boundAsVector);
    }
-   differentialMatrix = boundaryMatrix.transpose();
+   operatorMatrix = boundaryMatrix.transpose();
   }else{
    throw new DEC_Exception("undefined boundary requested");
   }

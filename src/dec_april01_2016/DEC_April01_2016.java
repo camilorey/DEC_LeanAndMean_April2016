@@ -177,24 +177,23 @@ public class DEC_April01_2016 extends PApplet{
   }
  }
  public void createHodgeStar(){
-  SparseVector vertexHodge = new SparseVector(myComplex.numPrimalVertices());
-  DEC_Iterator vertexIterator = myComplex.createIterator(0, 'p');
-  while(vertexIterator.hasNext()){
-   DEC_PrimalObject primalVert = (DEC_PrimalObject) vertexIterator.next();
-   DEC_DualObject dualFace = myComplex.dual(primalVert);
+  SparseVector vertexHodge = new SparseVector(myComplex.numPrimalEdges());
+  DEC_Iterator edgeIterator = myComplex.createIterator(1, 'p');
+  while(edgeIterator.hasNext()){
+   DEC_PrimalObject primalEdge = (DEC_PrimalObject) edgeIterator.next();
+   DEC_DualObject dualEdge = myComplex.dual(primalEdge);
    try{
-    float volPoint = primalVert.volume(myContainer);
-    float faceVol = dualFace.volume(myContainer);
-    float hodgeContent = faceVol/volPoint;
-    println(primalVert.getIndex()+":"+hodgeContent);
-    vertexHodge.set(primalVert.getIndex(), hodgeContent);
+    float volPrimal = primalEdge.volume(myContainer);
+    float volDual = dualEdge.volume(myContainer);
+    float hodgeContent = volDual/volPrimal;
+    println(primalEdge.getIndex()+":"+hodgeContent);
+    vertexHodge.set(primalEdge.getIndex(), hodgeContent);
    }catch(DEC_Exception ex){
     println("something went wrong trying to calculate volumes");
     ex.printStackTrace();
    }
   }
  }
- 
  public void showComplex(){
   if(showComplexOption[2]){
    fill(200);

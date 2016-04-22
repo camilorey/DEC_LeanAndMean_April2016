@@ -18,14 +18,15 @@ import utils.SparseVector;
  *
  * @author laptop
  */
-public class DEC_BoundaryOperator {
- protected SparseMatrix boundaryMatrix;
+public class DEC_BoundaryOperator extends DEC_MatrixOperator{
+ 
  public DEC_BoundaryOperator(){
-  boundaryMatrix = new SparseMatrix();
+  super();
  }
+ @Override
  public void calculateOperator(DEC_Complex complex,int dimension, char type) throws DEC_Exception{
   if(dimension == 1 && type == 'p'){
-   boundaryMatrix = new SparseMatrix(complex.numPrimalVertices(),complex.numPrimalEdges());
+   operatorMatrix = new SparseMatrix(complex.numPrimalVertices(),complex.numPrimalEdges());
    for(int i=0;i<complex.numPrimalEdges();i++){
     SparseVector boundAsVector = new SparseVector(complex.numPrimalVertices());
     DEC_PrimalObject edge = complex.getPrimalObject(1, i);
@@ -37,10 +38,10 @@ public class DEC_BoundaryOperator {
       boundAsVector.set(index, (float) vert.getOrientation());
      }
     }
-    boundaryMatrix.setColumn(i, boundAsVector);
+    operatorMatrix.setColumn(i, boundAsVector);
    }
   }else if(dimension == 2 && type =='p'){
-   boundaryMatrix = new SparseMatrix(complex.numPrimalEdges(),complex.numPrimalFaces());
+   operatorMatrix = new SparseMatrix(complex.numPrimalEdges(),complex.numPrimalFaces());
    for(int i=0;i<complex.numPrimalFaces();i++){
     SparseVector boundAsVector = new SparseVector(complex.numPrimalEdges());
     DEC_PrimalObject face = complex.getPrimalObject(2, i);
@@ -52,10 +53,10 @@ public class DEC_BoundaryOperator {
       boundAsVector.set(index, (float) edge.getOrientation());
      }
     }
-    boundaryMatrix.setColumn(i, boundAsVector);
+    operatorMatrix.setColumn(i, boundAsVector);
    }
   }else if(dimension == 1 && type == 'd'){
-   boundaryMatrix = new SparseMatrix(complex.numDualVertices(),complex.numDualEdges());
+   operatorMatrix = new SparseMatrix(complex.numDualVertices(),complex.numDualEdges());
    for(int i=0;i<complex.numDualEdges();i++){
     SparseVector boundAsVector = new SparseVector(complex.numDualVertices());
     DEC_DualObject dualEdge = complex.getDualObject(1, i);
@@ -67,10 +68,10 @@ public class DEC_BoundaryOperator {
       boundAsVector.set(index, vert.getOrientation());
      }
     }
-    boundaryMatrix.setColumn(i, boundAsVector);
+    operatorMatrix.setColumn(i, boundAsVector);
    }
   }else if(dimension == 2 && type == 'd'){
-   boundaryMatrix = new SparseMatrix(complex.numDualEdges(),complex.numDualFaces());
+   operatorMatrix = new SparseMatrix(complex.numDualEdges(),complex.numDualFaces());
    for(int i=0;i<complex.numDualFaces();i++){
     SparseVector boundAsVector = new SparseVector(complex.numDualEdges());
     DEC_DualObject dualFace = complex.getDualObject(2, i);
@@ -82,15 +83,10 @@ public class DEC_BoundaryOperator {
       boundAsVector.set(index, edge.getOrientation());
      }
     }
-    boundaryMatrix.setColumn(i, boundAsVector);
+    operatorMatrix.setColumn(i, boundAsVector);
    }
   }else{
    throw new DEC_Exception("undefined boundary requested");
   }
  }
-
- public SparseMatrix getBoundaryMatrix() {
-  return boundaryMatrix;
- }
- 
 }
